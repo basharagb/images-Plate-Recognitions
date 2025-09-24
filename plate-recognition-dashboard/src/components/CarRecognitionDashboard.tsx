@@ -47,6 +47,10 @@ const CarRecognitionDashboard: React.FC = () => {
       console.error('Recognition error:', error);
       setIsUploading(false);
     },
+    onSettled: () => {
+      // Ensure isUploading is always reset
+      setTimeout(() => setIsUploading(false), 100);
+    },
   });
 
   const deleteMutation = useMutation({
@@ -107,8 +111,10 @@ const CarRecognitionDashboard: React.FC = () => {
   const handleRecognize = useCallback(async () => {
     if (uploadedFiles.length === 0) return;
     
+    console.log('Starting recognition with files:', uploadedFiles.length);
     setIsUploading(true);
     const files = uploadedFiles.map(f => f.file);
+    console.log('Files to process:', files.map(f => ({ name: f.name, size: f.size, type: f.type })));
     recognizeMutation.mutate(files);
   }, [uploadedFiles, recognizeMutation]);
 
@@ -138,20 +144,17 @@ const CarRecognitionDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-brand rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-lg">🚗</span>
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gradient">Car Plate Recognition</h1>
-                  <p className="text-sm text-gray-600">
-                    Powered by ChatGPT Vision API • iDEALCHiP Technology Co
-                  </p>
+                  <h1 className="text-2xl font-bold text-gray-900">Car Plate Recognition</h1>
+                  <p className="text-sm text-gray-600">Powered by AI Vision Technology • iDEALCHiP Technology Co</p>
                 </div>
               </div>
             </div>
@@ -161,7 +164,7 @@ const CarRecognitionDashboard: React.FC = () => {
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-success-500 rounded-full"></div>
                   <span className="text-sm text-gray-600">
-                    {health.aiModel} • {health.chatgpt === 'configured' ? 'Connected' : 'Disconnected'}
+                    AI Vision • {health.chatgpt === 'configured' ? 'Connected' : 'Disconnected'}
                   </span>
                 </div>
               </div>
@@ -315,7 +318,7 @@ const CarRecognitionDashboard: React.FC = () => {
                     {isUploading ? (
                       <div className="flex items-center justify-center">
                         <div className="spinner w-4 h-4 mr-2"></div>
-                        Processing with ChatGPT...
+                        Processing with AI Vision...
                       </div>
                     ) : (
                       `Recognize Cars (${uploadedFiles.length})`
@@ -325,25 +328,28 @@ const CarRecognitionDashboard: React.FC = () => {
 
                 {/* Recognition Results */}
                 {recognizeMutation.data && (
-                  <div className="mt-6 p-4 bg-success-50 border border-success-200 rounded-lg">
-                    <h4 className="text-sm font-medium text-success-800 mb-2">
-                      Recognition Complete!
-                    </h4>
-                    <p className="text-sm text-success-700">
-                      Detected {recognizeMutation.data.cars.length} cars from{' '}
-                      {recognizeMutation.data.summary.totalImages} images
-                    </p>
-                  </div>
-                )}
-
-                {recognizeMutation.error && (
-                  <div className="mt-6 p-4 bg-error-50 border border-error-200 rounded-lg">
-                    <h4 className="text-sm font-medium text-error-800 mb-2">
-                      Recognition Failed
-                    </h4>
-                    <p className="text-sm text-error-700">
-                      {recognizeMutation.error.message}
-                    </p>
+                  <div className="mt-6 space-y-4">
+                    <div className="p-4 bg-success-50 border border-success-200 rounded-lg">
+                      <h3 className="text-lg font-semibold text-success-800 mb-2">Recognition Complete!</h3>
+                      <p className="text-success-700">
+                        Detected {recognizeMutation.data.summary.totalCarsDetected} cars from {recognizeMutation.data.summary.totalImages} images
+                      </p>
+                    </div>
+                    
+                    {/* Demo Mode Warning */}
+                    {recognizeMutation.data.details?.some((detail: any) => detail.cars?.some((car: any) => car.id?.includes('demo'))) && (
+                      <div className="p-4 bg-warning-50 border border-warning-200 rounded-lg">
+                        <div className="flex items-center">
+                          <div className="w-5 h-5 text-warning-600 mr-2">⚠️</div>
+                          <div>
+                            <h4 className="text-sm font-semibold text-warning-800">Demo Mode Active</h4>
+                            <p className="text-sm text-warning-700 mt-1">
+                              AI Vision API quota exceeded. Showing demo results. Please add credits to your OpenAI account for real recognition.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

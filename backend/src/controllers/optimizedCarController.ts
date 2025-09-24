@@ -38,30 +38,46 @@ export class OptimizedCarController {
           if (result.success && result.cars.length > 0) {
             console.log(`✅ Found ${result.cars.length} cars in ${file.originalname}`);
             
-            // Save each detected car to MySQL database
-            for (const detectedCar of result.cars) {
-              try {
-                const car = await Car.create({
+            // Check if this is a demo response
+            if ((result as any).isDemo) {
+              console.log('🎭 Demo mode: Not saving to database');
+              // For demo mode, just add to response without saving to database
+              for (const detectedCar of result.cars) {
+                allRecognizedCars.push({
+                  id: `demo_${Date.now()}`,
                   plateNumber: detectedCar.plateNumber,
                   color: detectedCar.color,
                   type: detectedCar.type,
                   imageUrl: `/uploads/${file.filename}`,
                   timestamp: new Date(),
                 });
+              }
+            } else {
+              // Save each detected car to MySQL database (real detection)
+              for (const detectedCar of result.cars) {
+                try {
+                  const car = await Car.create({
+                    plateNumber: detectedCar.plateNumber,
+                    color: detectedCar.color,
+                    type: detectedCar.type,
+                    imageUrl: `/uploads/${file.filename}`,
+                    timestamp: new Date(),
+                  });
 
-                allRecognizedCars.push({
-                  id: car.id,
-                  plateNumber: car.plateNumber,
-                  color: car.color,
-                  type: car.type,
-                  imageUrl: car.imageUrl,
-                  timestamp: car.timestamp,
-                });
+                  allRecognizedCars.push({
+                    id: car.id,
+                    plateNumber: car.plateNumber,
+                    color: car.color,
+                    type: car.type,
+                    imageUrl: car.imageUrl,
+                    timestamp: car.timestamp,
+                  });
 
-                console.log(`💾 Saved car to database: Plate ${car.plateNumber}, ${car.color} ${car.type}`);
-              } catch (dbError) {
-                console.error('❌ Database save error:', dbError);
-                // Continue processing other cars even if one fails
+                  console.log(`💾 Saved car to database: Plate ${car.plateNumber}, ${car.color} ${car.type}`);
+                } catch (dbError) {
+                  console.error('❌ Database save error:', dbError);
+                  // Continue processing other cars even if one fails
+                }
               }
             }
 

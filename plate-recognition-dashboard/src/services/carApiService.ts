@@ -95,24 +95,33 @@ class CarApiService {
   }
 
   /**
-   * Upload images and recognize cars using ChatGPT Vision API
+   * Upload images and recognize cars using AI Vision API
    */
   async recognizeCars(images: File[]): Promise<RecognitionResult> {
+    console.log('API Service: Starting recognition with', images.length, 'images');
     const formData = new FormData();
     
     // Append all images to FormData
-    images.forEach((image) => {
+    images.forEach((image, index) => {
+      console.log(`API Service: Adding image ${index + 1}:`, { name: image.name, size: image.size, type: image.type });
       formData.append('images', image);
     });
 
-    const response = await apiClient.post<RecognitionResult>('/recognize', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      timeout: 60000, // 60 seconds for multiple image processing
-    });
+    console.log('API Service: Sending POST request to /recognize');
+    try {
+      const response = await apiClient.post<RecognitionResult>('/recognize', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        timeout: 60000, // 60 seconds for multiple image processing
+      });
 
-    return response.data;
+      console.log('API Service: Recognition response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('API Service: Recognition error:', error);
+      throw error;
+    }
   }
 
   /**
