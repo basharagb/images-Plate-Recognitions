@@ -43,7 +43,8 @@ Car.init(
       allowNull: false,
       validate: {
         notEmpty: true,
-        len: [1, 20],
+        len: [2, 20],
+        is: /^[A-Z0-9]+$/i, // Allow letters and numbers only
       },
     },
     color: {

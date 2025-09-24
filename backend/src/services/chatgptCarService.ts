@@ -41,33 +41,37 @@ class ChatGPTCarService {
       const imageBuffer = await fs.readFile(imagePath);
       const base64Image = imageBuffer.toString('base64');
 
-      // Exact prompt as requested
-      const prompt = `Analyze this image and detect all vehicles. For each vehicle found, extract:
-1. Plate number (digits only, no letters or spaces)
-2. Car color 
-3. Car type (truck, bus, sedan, SUV, etc)
+      // Enhanced prompt for better accuracy
+      const prompt = `You are an expert in license plate recognition. Analyze this image carefully and detect all vehicles with visible license plates.
+
+For each vehicle found, extract the following information:
+1. License plate number - Look very carefully at the plate and read ALL visible characters (letters AND numbers). Do not convert letters to numbers.
+2. Car color - The primary color of the vehicle
+3. Car type - The type of vehicle (sedan, SUV, truck, bus, van, pickup, motorcycle, etc.)
 4. Assign a unique ID
+
+IMPORTANT INSTRUCTIONS:
+- Read the license plate EXACTLY as it appears - include both letters and numbers
+- If you see letters like "A", "B", "C" on the plate, include them as letters, not numbers
+- If you see numbers like "1", "2", "3" on the plate, include them as numbers
+- Look at the plate very carefully - sometimes what looks like a letter might be a number or vice versa
+- If the plate is partially obscured or unclear, try your best to read what is visible
+- Return the plate number exactly as you see it, maintaining the original format
 
 Return the results in this exact JSON format:
 {
   "cars": [
     {
-      "id": "unique_id_1",
-      "plateNumber": "123456",
-      "color": "red", 
+      "id": "car_1",
+      "plateNumber": "ABC123",
+      "color": "white",
       "type": "sedan"
-    },
-    {
-      "id": "unique_id_2",
-      "plateNumber": "789012", 
-      "color": "blue",
-      "type": "SUV"
     }
   ]
 }
 
-If no vehicles are detected, return: {"cars": []}
-Only return valid JSON, no additional text.`;
+If no vehicles with visible plates are detected, return: {"cars": []}
+Only return valid JSON, no additional text or explanations.`;
 
       // Call ChatGPT Vision API with gpt-4o-mini
       const response = await this.openai.chat.completions.create({
@@ -272,22 +276,22 @@ Only return valid JSON, no additional text.`;
   }
 
   /**
-   * Extract digits only from plate number
+   * Clean and validate plate number (keep letters and numbers)
    */
   private extractDigitsOnly(plateText: string): string {
     if (!plateText || typeof plateText !== 'string') {
       return '';
     }
     
-    // Extract only digits
-    const digitsOnly = plateText.replace(/\D/g, '');
+    // Clean the plate text - keep alphanumeric characters only
+    const cleaned = plateText.replace(/[^A-Z0-9]/gi, '').toUpperCase();
     
-    // Validate length (typically 3-8 digits)
-    if (digitsOnly.length < 3 || digitsOnly.length > 8) {
+    // Validate length (typically 3-10 characters for most countries)
+    if (cleaned.length < 2 || cleaned.length > 10) {
       return '';
     }
     
-    return digitsOnly;
+    return cleaned;
   }
 
   /**
