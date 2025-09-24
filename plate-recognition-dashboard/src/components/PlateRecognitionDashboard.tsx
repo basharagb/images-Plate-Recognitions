@@ -1,6 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import Tesseract from 'tesseract.js';
+import aiLicensePlateService from '../services/aiLicensePlateService';
+import AIConfigModal from './AIConfigModal';
 import './PlateRecognitionDashboard.css';
 
 interface RecognitionResult {
@@ -10,16 +12,62 @@ interface RecognitionResult {
   confidence: number;
   timestamp: Date;
   imageUrl: string;
+  processingMethod: 'AI' | 'OCR';
+  vehicleInfo?: {
+    type: string;
+    color: string;
+    make?: string;
+  };
 }
 
 const PlateRecognitionDashboard: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [results, setResults] = useState<RecognitionResult[]>([]);
   const [progress, setProgress] = useState(0);
+  const [useAI, setUseAI] = useState(false);
+  const [showAIConfig, setShowAIConfig] = useState(false);
+  const [processingMethod, setProcessingMethod] = useState<'AI' | 'OCR'>('OCR');
 
-  const processImage = async (file: File): Promise<RecognitionResult> => {
+  useEffect(() => {
+    // Check if AI is configured on component mount
+    const savedApiKey = localStorage.getItem('openai_api_key');
+    if (savedApiKey) {
+      aiLicensePlateService.setApiKey(savedApiKey);
+      setUseAI(true);
+      setProcessingMethod('AI');
+    }
+  }, []);
+
+  const processImage = useCallback(async (file: File): Promise<RecognitionResult> => {
     const imageUrl = URL.createObjectURL(file);
     
+    // Try AI processing first if available
+    if (useAI && aiLicensePlateService.isConfigured()) {
+      try {
+        setProgress(25);
+        const aiResult = await aiLicensePlateService.analyzeLicensePlate(file);
+        setProgress(100);
+        
+        const result: RecognitionResult = {
+          id: Date.now().toString(),
+          fileName: file.name,
+          plateNumber: aiResult.plateNumber,
+          confidence: aiResult.confidence,
+          timestamp: new Date(),
+          imageUrl,
+          processingMethod: 'AI',
+          vehicleInfo: aiResult.vehicleInfo
+        };
+        
+        console.log('AI Recognition Result:', result);
+        return result;
+      } catch (error) {
+        console.warn('AI processing failed, falling back to OCR:', error);
+        // Fall back to OCR if AI fails
+      }
+    }
+    
+    // OCR processing (fallback or primary method)
     return new Promise((resolve, reject) => {
       Tesseract.recognize(
         file,
@@ -100,13 +148,14 @@ const PlateRecognitionDashboard: React.FC = () => {
           plateNumber: plateNumber || 'No plate detected',
           confidence: Math.round(confidence),
           timestamp: new Date(),
-          imageUrl
+          imageUrl,
+          processingMethod: 'OCR'
         };
         
         resolve(result);
       }).catch(reject);
     });
-  };
+  }, [useAI]);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     setIsProcessing(true);
@@ -124,7 +173,7 @@ const PlateRecognitionDashboard: React.FC = () => {
       setIsProcessing(false);
       setProgress(0);
     }
-  }, []);
+  }, [processImage]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -142,6 +191,21 @@ const PlateRecognitionDashboard: React.FC = () => {
     setResults(prev => prev.filter(result => result.id !== id));
   };
 
+  const handleAIConfigSave = (apiKey: string) => {
+    localStorage.setItem('openai_api_key', apiKey);
+    aiLicensePlateService.setApiKey(apiKey);
+    setUseAI(true);
+    setProcessingMethod('AI');
+  };
+
+  const toggleProcessingMethod = () => {
+    if (useAI && aiLicensePlateService.isConfigured()) {
+      setProcessingMethod(prev => prev === 'AI' ? 'OCR' : 'AI');
+    } else {
+      setShowAIConfig(true);
+    }
+  };
+
   return (
     <div className="dashboard">
       <header className="dashboard-header">
@@ -152,6 +216,25 @@ const PlateRecognitionDashboard: React.FC = () => {
         <p>Industrial Area Traffic Monitoring - Potash Company</p>
         <div className="designer-credit">
           <p>Designed by <strong>Eng. Bashar Zabadani</strong> | iDEALCHiP Technology Co</p>
+        </div>
+        <div className="ai-controls">
+          <div className="processing-method">
+            <span>Processing Method: </span>
+            <button 
+              className={`method-toggle ${processingMethod === 'AI' ? 'ai-active' : 'ocr-active'}`}
+              onClick={toggleProcessingMethod}
+            >
+              {processingMethod === 'AI' ? '🤖 AI-Powered' : '📝 OCR'}
+            </button>
+            {!useAI && (
+              <button 
+                className="config-ai-button"
+                onClick={() => setShowAIConfig(true)}
+              >
+                ⚙️ Setup AI
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -199,11 +282,20 @@ const PlateRecognitionDashboard: React.FC = () => {
               <div className="result-info">
                 <div className="plate-number">
                   <strong>License Plate: {result.plateNumber}</strong>
+                  <span className={`processing-badge ${result.processingMethod.toLowerCase()}`}>
+                    {result.processingMethod === 'AI' ? '🤖 AI' : '📝 OCR'}
+                  </span>
                 </div>
                 <div className="result-details">
                   <p>File: {result.fileName}</p>
                   <p>Confidence: {result.confidence}%</p>
                   <p>Time: {result.timestamp.toLocaleString()}</p>
+                  {result.vehicleInfo && (
+                    <div className="vehicle-info">
+                      <p>Vehicle: {result.vehicleInfo.type} ({result.vehicleInfo.color})</p>
+                      {result.vehicleInfo.make && <p>Make: {result.vehicleInfo.make}</p>}
+                    </div>
+                  )}
                 </div>
                 <button 
                   onClick={() => deleteResult(result.id)}
@@ -226,6 +318,13 @@ const PlateRecognitionDashboard: React.FC = () => {
       <footer className="dashboard-footer">
         <p>Traffic Monitoring System - 12 Speed Cameras Active</p>
       </footer>
+
+      <AIConfigModal
+        isOpen={showAIConfig}
+        onClose={() => setShowAIConfig(false)}
+        onSave={handleAIConfigSave}
+        currentApiKey={localStorage.getItem('openai_api_key') || ''}
+      />
     </div>
   );
 };

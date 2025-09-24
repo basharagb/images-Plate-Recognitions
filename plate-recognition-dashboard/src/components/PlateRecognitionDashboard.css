@@ -274,3 +274,104 @@
     padding: 40px 15px;
   }
 }
+
+/* AI Controls */
+.ai-controls {
+  margin-top: 15px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  border: 1px solid rgba(167, 3, 74, 0.3);
+}
+
+.processing-method {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.processing-method span {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+}
+
+.method-toggle {
+  padding: 8px 16px;
+  border: 2px solid;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.method-toggle.ai-active {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  border-color: #4CAF50;
+  color: white;
+}
+
+.method-toggle.ocr-active {
+  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+  border-color: #2196F3;
+  color: white;
+}
+
+.method-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.config-ai-button {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #A7034A 0%, #8a0239 100%);
+  border: 2px solid #A7034A;
+  border-radius: 25px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.config-ai-button:hover {
+  background: linear-gradient(135deg, #c5043f 0%, #A7034A 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(167, 3, 74, 0.4);
+}
+
+/* Processing Badge */
+.processing-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-left: 10px;
+}
+
+.processing-badge.ai {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+}
+
+.processing-badge.ocr {
+  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+  color: white;
+}
+
+/* Vehicle Info */
+.vehicle-info {
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(167, 3, 74, 0.1);
+  border-radius: 5px;
+  border-left: 3px solid #A7034A;
+}
+
+.vehicle-info p {
+  margin: 2px 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.9);
+}
