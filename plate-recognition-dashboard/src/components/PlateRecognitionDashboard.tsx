@@ -32,10 +32,67 @@ const PlateRecognitionDashboard: React.FC = () => {
           }
         }
       ).then(({ data: { text, confidence } }) => {
-        // Extract license plate pattern (adjust regex based on your country's format)
-        const plateRegex = /[A-Z0-9]{2,8}/g;
-        const matches = text.match(plateRegex);
-        const plateNumber = matches ? matches[0] : text.replace(/\s+/g, '').toUpperCase();
+        console.log('Raw OCR text:', text);
+        
+        // Clean and preprocess the text
+        let cleanText = text
+          .replace(/[^\w\s-]/g, '') // Remove special characters except dash
+          .replace(/\s+/g, '') // Remove all spaces
+          .toUpperCase()
+          .trim();
+        
+        console.log('Cleaned text:', cleanText);
+        
+        // Enhanced regex patterns for different license plate formats
+        const platePatterns = [
+          /\b\d{2}-\d{5}\b/g,           // XX-XXXXX format (like 21-83168)
+          /\b\d{2}-\d{4}\b/g,            // XX-XXXX format
+          /\b\d{3}-\d{4}\b/g,            // XXX-XXXX format
+          /\b[A-Z]{2}-\d{4}\b/g,         // LL-XXXX format
+          /\b[A-Z]{3}-\d{3}\b/g,         // LLL-XXX format
+          /\b\d{2}[A-Z]\d{4}\b/g,        // XXL XXXX format
+          /\b[A-Z0-9]{5,8}\b/g           // General alphanumeric 5-8 chars
+        ];
+        
+        let plateNumber = '';
+        let bestMatch = '';
+        
+        // Try each pattern to find the best match
+        for (const pattern of platePatterns) {
+          const matches = cleanText.match(pattern);
+          if (matches && matches.length > 0) {
+            // Take the longest match as it's likely the most complete
+            const longestMatch = matches.reduce((a, b) => a.length > b.length ? a : b);
+            if (longestMatch.length > bestMatch.length) {
+              bestMatch = longestMatch;
+            }
+          }
+        }
+        
+        // If no pattern matches, try to extract the most likely plate number
+        if (!bestMatch) {
+          // Look for sequences of numbers and letters
+          const sequences = cleanText.match(/[A-Z0-9]{4,}/g);
+          if (sequences) {
+            bestMatch = sequences[0];
+          } else {
+            bestMatch = cleanText || 'No plate detected';
+          }
+        }
+        
+        plateNumber = bestMatch;
+        
+        // Additional validation - if we got a very short result, try alternative approach
+        if (plateNumber.length < 4 && text.length > 0) {
+          // Try to find number sequences in the original text
+          const numberSequences = text.match(/\d{2,}/g);
+          
+          if (numberSequences && numberSequences.length > 0) {
+            plateNumber = numberSequences.join('-').toUpperCase();
+          }
+        }
+        
+        console.log('Final plate number:', plateNumber);
         
         const result: RecognitionResult = {
           id: Date.now().toString(),
