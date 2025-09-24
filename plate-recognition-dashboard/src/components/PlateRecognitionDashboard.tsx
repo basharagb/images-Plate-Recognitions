@@ -88,8 +88,14 @@ const PlateRecognitionDashboard: React.FC = () => {
   return (
     <div className="dashboard">
       <header className="dashboard-header">
+        <div className="company-logo">
+          <img src="/idealchip-logo.png" alt="iDEALCHiP Technology Co" className="logo" />
+        </div>
         <h1>🚗 License Plate Recognition System</h1>
         <p>Industrial Area Traffic Monitoring - Potash Company</p>
+        <div className="designer-credit">
+          <p>Designed by <strong>Eng. Bashar Zabadani</strong> | iDEALCHiP Technology Co</p>
+        </div>
       </header>
 
       <div className="upload-section">

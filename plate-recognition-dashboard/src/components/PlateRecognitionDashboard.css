@@ -1,6 +1,6 @@
 .dashboard {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #264878 0%, #A7034A 100%);
   padding: 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -9,6 +9,26 @@
   text-align: center;
   color: white;
   margin-bottom: 30px;
+}
+
+.company-logo {
+  margin-bottom: 20px;
+}
+
+.logo {
+  height: 80px;
+  width: auto;
+  filter: brightness(0) invert(1);
+}
+
+.designer-credit {
+  margin-top: 15px;
+  opacity: 0.9;
+}
+
+.designer-credit p {
+  font-size: 0.9rem;
+  margin: 0;
 }
 
 .dashboard-header h1 {
@@ -40,7 +60,7 @@
 
 .dropzone:hover,
 .dropzone.active {
-  border-color: #ffd700;
+  border-color: #A7034A;
   background: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
 }
@@ -60,8 +80,8 @@
 }
 
 .upload-button {
-  background: #ffd700;
-  color: #333;
+  background: #A7034A;
+  color: white;
   border: none;
   padding: 12px 30px;
   border-radius: 25px;
@@ -72,9 +92,9 @@
 }
 
 .upload-button:hover {
-  background: #ffed4e;
+  background: #8a0239;
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+  box-shadow: 0 5px 15px rgba(167, 3, 74, 0.4);
 }
 
 .processing {
@@ -85,7 +105,7 @@
   width: 50px;
   height: 50px;
   border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top: 4px solid #ffd700;
+  border-top: 4px solid #A7034A;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 20px;
@@ -107,7 +127,7 @@
 
 .progress-fill {
   height: 100%;
-  background: #ffd700;
+  background: #A7034A;
   transition: width 0.3s ease;
 }
 
@@ -186,7 +206,7 @@
   padding: 10px;
   background: #f8f9fa;
   border-radius: 8px;
-  border-left: 4px solid #ffd700;
+  border-left: 4px solid #264878;
 }
 
 .result-details p {
