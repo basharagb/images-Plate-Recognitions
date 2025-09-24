@@ -1,0 +1,25 @@
+<svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+  <!-- iDEALCHiP Logo Recreation -->
+  <!-- Circular logo part -->
+  <g transform="translate(5,5)">
+    <!-- Outer circle segments -->
+    <path d="M 25 5 A 20 20 0 0 1 45 25 L 35 25 A 10 10 0 0 0 25 15 Z" fill="#A7034A"/>
+    <path d="M 45 25 A 20 20 0 0 1 25 45 L 25 35 A 10 10 0 0 0 35 25 Z" fill="#264878"/>
+    <path d="M 25 45 A 20 20 0 0 1 5 25 L 15 25 A 10 10 0 0 0 25 35 Z" fill="#A7034A"/>
+    <path d="M 5 25 A 20 20 0 0 1 25 5 L 25 15 A 10 10 0 0 0 15 25 Z" fill="#264878"/>
+    
+    <!-- Center circle -->
+    <circle cx="25" cy="25" r="6" fill="white"/>
+    <circle cx="25" cy="25" r="3" fill="#264878"/>
+    
+    <!-- Small squares -->
+    <rect x="5" y="5" width="8" height="8" fill="#A7034A"/>
+    <rect x="15" y="5" width="6" height="6" fill="#A7034A"/>
+    <rect x="5" y="15" width="6" height="6" fill="#264878"/>
+  </g>
+  
+  <!-- Text part -->
+  <g transform="translate(60,15)">
+    <text x="0" y="25" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#264878">iDEALCHiP</text>
+  </g>
+</svg>

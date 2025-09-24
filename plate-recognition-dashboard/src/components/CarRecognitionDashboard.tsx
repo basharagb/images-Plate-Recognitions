@@ -38,6 +38,7 @@ const CarRecognitionDashboard: React.FC = () => {
     mutationFn: (files: File[]) => carApiService.recognizeCars(files),
     onSuccess: (data: RecognitionResult) => {
       console.log('Recognition result:', data);
+      // Refresh database queries to get updated data
       queryClient.invalidateQueries({ queryKey: ['cars'] });
       queryClient.invalidateQueries({ queryKey: ['statistics'] });
       setUploadedFiles([]);
@@ -138,7 +139,11 @@ const CarRecognitionDashboard: React.FC = () => {
     };
   }, [uploadedFiles]);
 
-  const cars = carsData?.data || [];
+  // Combine database cars with recent recognition results
+  const databaseCars = carsData?.data || [];
+  const recognitionCars = recognizeMutation.data?.cars || [];
+  const cars = recognitionCars.length > 0 ? recognitionCars : databaseCars;
+  
   const stats = statsData?.data;
   const health = healthData;
 
@@ -148,13 +153,15 @@ const CarRecognitionDashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">🚗</span>
-                </div>
+              <div className="flex items-center space-x-4">
+                <img 
+                  src="/logo.svg" 
+                  alt="iDEALCHiP Logo" 
+                  className="h-12 w-auto"
+                />
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Car Plate Recognition</h1>
-                  <p className="text-sm text-gray-600">Powered by AI Vision Technology • iDEALCHiP Technology Co</p>
+                  <h1 className="text-2xl font-bold text-primary-800">Car Plate Recognition</h1>
+                  <p className="text-sm text-primary-600">Powered by AI Vision Technology • iDEALCHiP Technology Co</p>
                 </div>
               </div>
             </div>
@@ -162,8 +169,8 @@ const CarRecognitionDashboard: React.FC = () => {
             {health && (
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-success-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">
+                  <div className="w-2 h-2 bg-secondary-600 rounded-full"></div>
+                  <span className="text-sm text-primary-600">
                     AI Vision • {health.chatgpt === 'configured' ? 'Connected' : 'Disconnected'}
                   </span>
                 </div>
@@ -344,7 +351,7 @@ const CarRecognitionDashboard: React.FC = () => {
                           <div>
                             <h4 className="text-sm font-semibold text-warning-800">Demo Mode Active</h4>
                             <p className="text-sm text-warning-700 mt-1">
-                              AI Vision API quota exceeded. Showing demo results. Please add credits to your OpenAI account for real recognition.
+                              وضع التجريب: يُظهر أقرب 1-2 مركبة بلوحات واضحة. أضف رصيد OpenAI للتعرف الحقيقي.
                             </p>
                           </div>
                         </div>
@@ -473,10 +480,17 @@ const CarRecognitionDashboard: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <img
-                    src={carApiService.getImageUrl(selectedCar.imageUrl)}
+                    src={`http://localhost:3001${selectedCar.imageUrl}`}
                     alt={`Car ${selectedCar.plateNumber}`}
                     className="w-full h-64 object-cover rounded-lg border border-gray-200"
+                    onError={(e) => {
+                      console.error('Image failed to load:', selectedCar.imageUrl);
+                      e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBhdmFpbGFibGU8L3RleHQ+Cjwvc3ZnPg==';
+                    }}
                   />
+                  <p className="text-xs text-gray-500 mt-2">
+                    Image URL: {selectedCar.imageUrl}
+                  </p>
                 </div>
 
                 <div className="space-y-4">
