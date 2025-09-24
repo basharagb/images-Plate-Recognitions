@@ -2,34 +2,36 @@ import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../config/database';
 
 // Define the attributes interface
-export interface ViolationAttributes {
+export interface CarAttributes {
   id: number;
   plateNumber: string;
+  color: string;
+  type: string;
   imageUrl: string;
   timestamp: Date;
-  confirmed: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
 // Define creation attributes (optional fields for creation)
-export interface ViolationCreationAttributes 
-  extends Optional<ViolationAttributes, 'id' | 'createdAt' | 'updatedAt' | 'confirmed'> {}
+export interface CarCreationAttributes 
+  extends Optional<CarAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
 
 // Define the model class
-class Violation extends Model<ViolationAttributes, ViolationCreationAttributes> 
-  implements ViolationAttributes {
+class Car extends Model<CarAttributes, CarCreationAttributes> 
+  implements CarAttributes {
   public id!: number;
   public plateNumber!: string;
+  public color!: string;
+  public type!: string;
   public imageUrl!: string;
   public timestamp!: Date;
-  public confirmed!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
 
 // Initialize the model
-Violation.init(
+Car.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -37,6 +39,22 @@ Violation.init(
       primaryKey: true,
     },
     plateNumber: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      validate: {
+        notEmpty: true,
+        len: [1, 20],
+      },
+    },
+    color: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      validate: {
+        notEmpty: true,
+        len: [1, 20],
+      },
+    },
+    type: {
       type: DataTypes.STRING(20),
       allowNull: false,
       validate: {
@@ -56,11 +74,6 @@ Violation.init(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
-    confirmed: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
-    },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -72,14 +85,17 @@ Violation.init(
   },
   {
     sequelize,
-    modelName: 'Violation',
-    tableName: 'violations',
+    modelName: 'Car',
+    tableName: 'cars',
     indexes: [
       {
         fields: ['plate_number'],
       },
       {
-        fields: ['confirmed'],
+        fields: ['color'],
+      },
+      {
+        fields: ['type'],
       },
       {
         fields: ['timestamp'],
@@ -88,4 +104,4 @@ Violation.init(
   }
 );
 
-export default Violation;
+export default Car;

@@ -1,9 +1,11 @@
 import sequelize from '../config/database';
 import Violation from './Violation';
+import Car from './Car';
 
 // Initialize all models
 const models = {
   Violation,
+  Car,
 };
 
 // Set up associations here if needed
