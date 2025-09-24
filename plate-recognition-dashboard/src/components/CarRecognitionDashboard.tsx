@@ -480,11 +480,12 @@ const CarRecognitionDashboard: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <img
-                    src={`http://localhost:3001${selectedCar.imageUrl}`}
+                    src={carApiService.getImageUrl(selectedCar.imageUrl)}
                     alt={`Car ${selectedCar.plateNumber}`}
                     className="w-full h-64 object-cover rounded-lg border border-gray-200"
                     onError={(e) => {
                       console.error('Image failed to load:', selectedCar.imageUrl);
+                      console.error('Full image URL:', carApiService.getImageUrl(selectedCar.imageUrl));
                       e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBhdmFpbGFibGU8L3RleHQ+Cjwvc3ZnPg==';
                     }}
                   />

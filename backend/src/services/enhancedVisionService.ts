@@ -40,37 +40,48 @@ class EnhancedVisionService {
       const imageBuffer = await fs.readFile(imagePath);
       const base64Image = imageBuffer.toString('base64');
 
-      // Enhanced prompt for multi-vehicle detection
-      const prompt = `Detect all vehicles in this image. For each vehicle, return:
-- Plate number (digits only, no letters or spaces)
-- Car color
-- Car type (truck, bus, sedan, SUV, etc)
-- Unique ID for the detection
+      // Enhanced prompt for multi-vehicle detection with alphanumeric plate support
+      const prompt = `Analyze this traffic image carefully and detect vehicles with visible license plates. 
 
-Return result as structured JSON in this exact format:
+CRITICAL ANALYSIS STEPS:
+1. Identify ALL vehicles in the image
+2. For each vehicle, examine the license plate area closely
+3. Extract the COMPLETE license plate text exactly as it appears
+4. Prioritize vehicles that are:
+   - Clearly visible and well-lit
+   - Centered or prominent in the image
+   - Have readable license plates
+
+PLATE EXTRACTION RULES:
+- Include ALL characters: letters, numbers, special symbols (•, -, spaces)
+- Common formats: 22•24869, AB-1234, 123-ABC, XX•XXXXX
+- Do NOT convert or modify the text - extract exactly as shown
+- If you see "22•24869" write "22•24869", not "2224869"
+- Pay attention to bullet points (•) and dashes (-)
+
+VEHICLE INFORMATION:
+- Color: Primary/dominant color of the vehicle body
+- Type: sedan, SUV, truck, bus, pickup, van, hatchback, coupe
+- Focus on the most prominent vehicles first
+
+Return ONLY valid JSON in this format:
 {
   "cars": [
     {
-      "id": "unique_id_1",
-      "plateNumber": "123456",
-      "color": "red",
+      "id": "car_1", 
+      "plateNumber": "22•24869",
+      "color": "white",
       "type": "sedan"
-    },
-    {
-      "id": "unique_id_2", 
-      "plateNumber": "789012",
-      "color": "blue",
-      "type": "SUV"
     }
   ]
 }
 
-If no vehicles are detected, return: {"cars": []}
-Only return valid JSON, no additional text.`;
+If no clear license plates are visible, return: {"cars": []}
+NO additional text, explanations, or markdown formatting.`;
 
       // Call ChatGPT Vision API
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4-vision-preview',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'user',
@@ -156,8 +167,8 @@ Only return valid JSON, no additional text.`;
   private fallbackExtraction(content: string): { cars: any[] } {
     const cars: any[] = [];
     
-    // Try to find patterns in the text
-    const platePattern = /plate.*?(\d{3,8})/gi;
+    // Try to find patterns in the text - updated for alphanumeric plates with more flexibility
+    const platePattern = /plate.*?([A-Z0-9\s\-•\.]{2,15})/gi;
     const colorPattern = /color.*?(red|blue|green|yellow|black|white|gray|silver|brown|orange)/gi;
     const typePattern = /type.*?(sedan|suv|truck|bus|van|coupe|hatchback|pickup|motorcycle)/gi;
     
@@ -167,7 +178,8 @@ Only return valid JSON, no additional text.`;
     
     if (plateMatches && plateMatches.length > 0) {
       for (let i = 0; i < plateMatches.length; i++) {
-        const plateNumber = plateMatches[i]?.match(/\d{3,8}/)?.[0] || '';
+        const plateMatch = plateMatches[i]?.match(/([A-Z0-9\s\-•\.]{2,15})/)?.[0] || '';
+        const plateNumber = this.cleanPlateNumber(plateMatch);
         const color = colorMatches?.[i]?.split(/color.*?/i)?.[1]?.trim() || 'unknown';
         const type = typeMatches?.[i]?.split(/type.*?/i)?.[1]?.trim() || 'unknown';
         
@@ -226,20 +238,44 @@ Only return valid JSON, no additional text.`;
   }
 
   /**
-   * Clean plate number to digits only
+   * Clean and validate alphanumeric plate number
    */
   private cleanPlateNumber(plateText: string): string {
     if (!plateText) return '';
     
-    // Extract only digits
-    const digitsOnly = plateText.replace(/\D/g, '');
+    // Remove common prefixes/suffixes and extra whitespace
+    let cleaned = plateText
+      .replace(/^(license plate|plate number|number):\s*/i, '')
+      .replace(/\s*(license plate|plate number)$/i, '')
+      .trim();
     
-    // Validate length (typically 3-8 digits for most countries)
-    if (digitsOnly.length < 3 || digitsOnly.length > 8) {
+    // Remove quotes if present
+    cleaned = cleaned.replace(/^["']|["']$/g, '');
+    
+    // Normalize special characters (convert various dash/bullet types to standard ones)
+    cleaned = cleaned
+      .replace(/[–—]/g, '-')  // Convert em/en dashes to regular dash
+      .replace(/[•·]/g, '•')  // Normalize bullet points
+      .replace(/\s+/g, ' ')   // Normalize whitespace
+      .trim()
+      .toUpperCase();
+    
+    // Validate format - allow letters, numbers, spaces, dashes, bullet points, and other common plate characters
+    if (!/^[A-Z0-9\s\-•\.]{2,15}$/.test(cleaned)) {
+      console.warn('Plate validation failed for:', cleaned);
       return '';
     }
     
-    return digitsOnly;
+    // Additional validation - ensure it contains at least some alphanumeric characters
+    if (!/[A-Z0-9]/.test(cleaned)) {
+      console.warn('Plate contains no alphanumeric characters:', cleaned);
+      return '';
+    }
+    
+    // Log successful plate cleaning
+    console.log('Successfully cleaned plate:', plateText, '->', cleaned);
+    
+    return cleaned;
   }
 
   /**

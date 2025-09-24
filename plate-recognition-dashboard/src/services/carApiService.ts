@@ -187,10 +187,8 @@ class CarApiService {
    * Format plate number for display
    */
   formatPlateNumber(plateNumber: string): string {
-    // Add dashes for better readability if needed
-    if (plateNumber.length >= 6) {
-      return plateNumber.replace(/(\d{3})(\d+)/, '$1-$2');
-    }
+    // Return the plate number as-is since it may contain letters, numbers, and special characters
+    // The backend should already provide properly formatted plates
     return plateNumber;
   }
 
