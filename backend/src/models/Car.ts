@@ -9,10 +9,10 @@ export interface CarAttributes {
   type: string;
   imageUrl: string;
   imagePath?: string;
-  detectionId?: string;
-  timestamp: Date;
   confidence?: number;
   cameraInfo?: string;
+  detectionId?: string;
+  timestamp: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,10 +30,10 @@ class Car extends Model<CarAttributes, CarCreationAttributes>
   public type!: string;
   public imageUrl!: string;
   public imagePath?: string;
-  public detectionId?: string;
-  public timestamp!: Date;
   public confidence?: number;
   public cameraInfo?: string;
+  public detectionId?: string;
+  public timestamp!: Date;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -83,24 +83,24 @@ Car.init(
       allowNull: true,
       comment: 'Local file path to the uploaded image',
     },
-    detectionId: {
-      type: DataTypes.STRING(100),
-      allowNull: true,
-      comment: 'Identifier for the detection method used (e.g., strict_, regular_, traffic_)',
-    },
     confidence: {
       type: DataTypes.FLOAT,
       allowNull: true,
       validate: {
         min: 0,
-        max: 100,
+        max: 1,
       },
-      comment: 'AI confidence score (0-100)',
+      comment: 'AI confidence score for the detection (0-1)',
     },
     cameraInfo: {
       type: DataTypes.TEXT,
       allowNull: true,
-      comment: 'Traffic camera metadata and information',
+      comment: 'Information about the camera that captured the image',
+    },
+    detectionId: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'Identifier for the detection method used (e.g., strict_, regular_, traffic_)',
     },
     timestamp: {
       type: DataTypes.DATE,

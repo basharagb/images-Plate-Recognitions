@@ -31,7 +31,7 @@ class ChatGPTVisionService {
 
       // Call ChatGPT Vision API
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'user',

@@ -17,7 +17,8 @@ export const syncDatabase = async (force = false) => {
     await sequelize.authenticate();
     console.log('✅ Database connection established successfully.');
     
-    await sequelize.sync({ force });
+    // Use alter: true to safely add new columns without losing data
+    await sequelize.sync({ alter: true });
     console.log('✅ Database synchronized successfully.');
   } catch (error) {
     console.error('❌ Unable to connect to the database:', error);

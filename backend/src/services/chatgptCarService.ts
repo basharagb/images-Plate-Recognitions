@@ -33,7 +33,7 @@ class ChatGPTCarService {
   }
 
   /**
-   * Analyze car image using ChatGPT Vision API (gpt-4o-mini)
+   * Analyze car image using ChatGPT Vision API (gpt-4o)
    */
   public async analyzeCars(imagePath: string): Promise<CarRecognitionResponse> {
     try {
@@ -78,9 +78,9 @@ Return the results in this exact JSON format with only ONE car:
 If no vehicles with clearly visible plates are detected, return: {"cars": []}
 Only return valid JSON, no additional text or explanations.`;
 
-      // Call ChatGPT Vision API with gpt-4o-mini
+      // Call ChatGPT Vision API with gpt-4o
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'user',

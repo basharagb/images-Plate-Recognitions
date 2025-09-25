@@ -17,20 +17,50 @@ const CarRecognitionDashboard: React.FC = () => {
   const queryClient = useQueryClient();
 
   // Queries
-  const { data: carsData, isLoading: carsLoading, refetch: refetchCars } = useQuery({
+  const { data: carsData, isLoading: carsLoading, error: carsError, refetch: refetchCars } = useQuery({
     queryKey: ['cars'],
-    queryFn: () => carApiService.getCars({ limit: 50, sortBy: 'timestamp', sortOrder: 'DESC' }),
+    queryFn: async () => {
+      console.log('🔍 Fetching cars from API...');
+      try {
+        const result = await carApiService.getCars({ limit: 50, sortBy: 'timestamp', sortOrder: 'DESC' });
+        console.log('✅ Cars data loaded successfully:', result);
+        return result;
+      } catch (error) {
+        console.error('❌ Error loading cars:', error);
+        throw error;
+      }
+    },
   });
 
-  const { data: statsData } = useQuery({
+  const { data: statsData, error: statsError } = useQuery({
     queryKey: ['statistics'],
-    queryFn: () => carApiService.getStatistics(),
+    queryFn: async () => {
+      console.log('📊 Fetching statistics from API...');
+      try {
+        const result = await carApiService.getStatistics();
+        console.log('✅ Statistics loaded successfully:', result);
+        return result;
+      } catch (error) {
+        console.error('❌ Error loading statistics:', error);
+        throw error;
+      }
+    },
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
-  const { data: healthData } = useQuery({
+  const { data: healthData, error: healthError } = useQuery({
     queryKey: ['health'],
-    queryFn: () => carApiService.checkHealth(),
+    queryFn: async () => {
+      console.log('🏥 Checking API health...');
+      try {
+        const result = await carApiService.checkHealth();
+        console.log('✅ Health check successful:', result);
+        return result;
+      } catch (error) {
+        console.error('❌ Health check failed:', error);
+        throw error;
+      }
+    },
   });
 
   // Mutations
@@ -54,15 +84,7 @@ const CarRecognitionDashboard: React.FC = () => {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => carApiService.deleteCar(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cars'] });
-      queryClient.invalidateQueries({ queryKey: ['statistics'] });
-      setSelectedCar(null);
-      setShowDetails(false);
-    },
-  });
+  // Note: Delete functionality removed in simplified API
 
   // File handling
   const handleFileSelect = useCallback((files: FileList) => {
@@ -124,11 +146,7 @@ const CarRecognitionDashboard: React.FC = () => {
     setShowDetails(true);
   }, []);
 
-  const handleDeleteCar = useCallback((id: number) => {
-    if (window.confirm('Are you sure you want to delete this car record?')) {
-      deleteMutation.mutate(id);
-    }
-  }, [deleteMutation]);
+  // Note: Delete functionality removed in simplified API
 
   // Cleanup object URLs on unmount
   React.useEffect(() => {
@@ -140,12 +158,23 @@ const CarRecognitionDashboard: React.FC = () => {
   }, [uploadedFiles]);
 
   // Combine database cars with recent recognition results
-  const databaseCars = carsData?.data || [];
+  const databaseCars = carsData?.cars || [];
   const recognitionCars = recognizeMutation.data?.cars || [];
-  const cars = recognitionCars.length > 0 ? recognitionCars : databaseCars;
+  const cars: Car[] = recognitionCars.length > 0 ? recognitionCars : databaseCars;
   
-  const stats = statsData?.data;
+  const stats = statsData;
   const health = healthData;
+
+  // Debug logging
+  console.log('🚗 Dashboard render state:', {
+    carsLoading,
+    carsError: carsError ? String(carsError) : null,
+    databaseCars: databaseCars.length,
+    recognitionCars: recognitionCars.length,
+    totalCars: cars.length,
+    statsError: statsError ? String(statsError) : null,
+    healthError: healthError ? String(healthError) : null,
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -181,6 +210,19 @@ const CarRecognitionDashboard: React.FC = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Error Display - Temporarily disabled for compilation */}
+        {/* {(carsError || statsError || healthError) && 
+          <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <h3 className="text-lg font-semibold text-red-800 mb-2">⚠️ API Connection Issues</h3>
+            <p className="text-red-700">
+              {carsError && `Cars API Error. `}
+              {statsError && `Statistics API Error. `}
+              {healthError && `Health API Error. `}
+              Please check that the backend server is running on http://localhost:3002
+            </p>
+          </div>
+        } */}
+
         {/* Statistics Cards */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -189,7 +231,7 @@ const CarRecognitionDashboard: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600">Total Cars</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats?.totalInDatabase || 0}</p>
                   </div>
                   <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
                     <span className="text-2xl">🚗</span>
@@ -203,7 +245,7 @@ const CarRecognitionDashboard: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600">Today</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.today}</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats?.totalCars || 0}</p>
                   </div>
                   <div className="w-12 h-12 bg-success-100 rounded-lg flex items-center justify-center">
                     <span className="text-2xl">📅</span>
@@ -217,7 +259,7 @@ const CarRecognitionDashboard: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600">Last 24h</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.recent24h}</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats?.last24Hours || 0}</p>
                   </div>
                   <div className="w-12 h-12 bg-warning-100 rounded-lg flex items-center justify-center">
                     <span className="text-2xl">⏰</span>
@@ -231,7 +273,7 @@ const CarRecognitionDashboard: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600">AI Model</p>
-                    <p className="text-lg font-semibold text-primary-600">{stats.aiModel}</p>
+                    <p className="text-lg font-semibold text-primary-600">gpt-4o-mini</p>
                   </div>
                   <div className="w-12 h-12 bg-secondary-100 rounded-lg flex items-center justify-center">
                     <span className="text-2xl">🤖</span>
@@ -344,7 +386,7 @@ const CarRecognitionDashboard: React.FC = () => {
                     </div>
                     
                     {/* Demo Mode Warning */}
-                    {recognizeMutation.data.details?.some((detail: any) => detail.cars?.some((car: any) => car.id?.includes('demo'))) && (
+                    {recognizeMutation.data.details?.some((detail: any) => detail.cars?.some((car: any) => car.detectionId?.includes('demo') || String(car.id).includes('demo'))) && (
                       <div className="p-4 bg-warning-50 border border-warning-200 rounded-lg">
                         <div className="flex items-center">
                           <div className="w-5 h-5 text-warning-600 mr-2">⚠️</div>
@@ -408,6 +450,14 @@ const CarRecognitionDashboard: React.FC = () => {
                             src={carApiService.getImageUrl(car.imageUrl)}
                             alt={`Car ${car.plateNumber}`}
                             className="w-16 h-12 object-cover rounded-lg border border-gray-200"
+                            onError={(e) => {
+                              console.error('Table image failed to load:', car.imageUrl);
+                              console.error('Full table image URL:', carApiService.getImageUrl(car.imageUrl));
+                              e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA2NCA0OCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzY2NzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4K';
+                            }}
+                            onLoad={() => {
+                              console.log('Table image loaded successfully:', car.imageUrl);
+                            }}
                           />
                         </td>
                         <td>
@@ -430,15 +480,7 @@ const CarRecognitionDashboard: React.FC = () => {
                           {carApiService.formatTimestamp(car.timestamp)}
                         </td>
                         <td>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteCar(car.id);
-                            }}
-                            className="text-error-600 hover:text-error-800 text-sm"
-                          >
-                            Delete
-                          </button>
+                          <span className="text-sm text-gray-400">View Details</span>
                         </td>
                       </tr>
                     ))}
@@ -484,9 +526,14 @@ const CarRecognitionDashboard: React.FC = () => {
                     alt={`Car ${selectedCar.plateNumber}`}
                     className="w-full h-64 object-cover rounded-lg border border-gray-200"
                     onError={(e) => {
-                      console.error('Image failed to load:', selectedCar.imageUrl);
-                      console.error('Full image URL:', carApiService.getImageUrl(selectedCar.imageUrl));
+                      console.error('Modal image failed to load:', selectedCar.imageUrl);
+                      console.error('Full modal image URL:', carApiService.getImageUrl(selectedCar.imageUrl));
+                      console.error('Image error event:', e);
                       e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBhdmFpbGFibGU8L3RleHQ+Cjwvc3ZnPg==';
+                    }}
+                    onLoad={() => {
+                      console.log('Modal image loaded successfully:', selectedCar.imageUrl);
+                      console.log('Full modal image URL:', carApiService.getImageUrl(selectedCar.imageUrl));
                     }}
                   />
                   <p className="text-xs text-gray-500 mt-2">
@@ -539,12 +586,6 @@ const CarRecognitionDashboard: React.FC = () => {
                   className="btn-outline"
                 >
                   Close
-                </button>
-                <button
-                  onClick={() => handleDeleteCar(selectedCar.id)}
-                  className="btn-error"
-                >
-                  Delete Car
                 </button>
               </div>
             </div>

@@ -42,7 +42,7 @@ export class ViolationController {
               originalFileName: file.originalname,
               processingMethod: ocrResult.processingMethod,
               confidence: ocrResult.confidence,
-              vehicleInfo: ocrResult.vehicleInfo,
+              vehicleInfo: ocrResult.vehicleInfo ? JSON.stringify(ocrResult.vehicleInfo) : undefined,
               cameraId: req.body.cameraId,
               location: req.body.location,
               speed: req.body.speed ? parseInt(req.body.speed) : undefined,

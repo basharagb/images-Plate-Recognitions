@@ -73,7 +73,7 @@ class AILicensePlateService {
       const base64Image = imageBuffer.toString('base64');
 
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'user',

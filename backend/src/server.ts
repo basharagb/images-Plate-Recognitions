@@ -16,7 +16,7 @@ import { ensureUploadDir } from './utils/fileUtils';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 
 // Rate limiting
 const limiter = rateLimit({
@@ -29,9 +29,29 @@ const limiter = rateLimit({
 });
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "http://localhost:3002", "http://localhost:3003", "http://localhost:3005"],
+      connectSrc: ["'self'", "http://localhost:3002", "http://localhost:3003", "http://localhost:3005"],
+    },
+  },
+}));
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:3002',
+    'http://localhost:3003',
+    'http://localhost:3004',
+    'http://localhost:3005',
+    'http://127.0.0.1:52963', // Browser preview proxy
+    /^http:\/\/127\.0\.0\.1:\d+$/, // Allow any port on 127.0.0.1 for browser previews
+    /^http:\/\/localhost:\d+$/, // Allow any port on localhost
+    ...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : [])
+  ],
   credentials: true,
 }));
 app.use(compression());

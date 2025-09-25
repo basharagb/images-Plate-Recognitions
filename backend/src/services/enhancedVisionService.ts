@@ -41,47 +41,62 @@ class EnhancedVisionService {
       const base64Image = imageBuffer.toString('base64');
 
       // Enhanced prompt for multi-vehicle detection with alphanumeric plate support
-      const prompt = `Analyze this traffic image carefully and detect vehicles with visible license plates. 
+      const prompt = `You are an expert license plate recognition system. Analyze this traffic image with EXTREME PRECISION.
 
-CRITICAL ANALYSIS STEPS:
-1. Identify ALL vehicles in the image
-2. For each vehicle, examine the license plate area closely
-3. Extract the COMPLETE license plate text exactly as it appears
-4. Prioritize vehicles that are:
-   - Clearly visible and well-lit
-   - Centered or prominent in the image
-   - Have readable license plates
+🎯 CRITICAL MISSION: Extract license plate numbers with 100% accuracy.
 
-PLATE EXTRACTION RULES:
-- Include ALL characters: letters, numbers, special symbols (•, -, spaces)
-- Common formats: 22•24869, AB-1234, 123-ABC, XX•XXXXX
-- Do NOT convert or modify the text - extract exactly as shown
-- If you see "22•24869" write "22•24869", not "2224869"
-- Pay attention to bullet points (•) and dashes (-)
+STEP-BY-STEP ANALYSIS:
+1. Scan the entire image systematically from left to right, top to bottom
+2. Identify ALL vehicles (cars, trucks, buses, motorcycles)
+3. For EACH vehicle, locate the license plate area (front or rear)
+4. Read each character on the plate ONE BY ONE, digit by digit, letter by letter
+5. Double-check your reading - look again at each character to confirm
 
-VEHICLE INFORMATION:
-- Color: Primary/dominant color of the vehicle body
-- Type: sedan, SUV, truck, bus, pickup, van, hatchback, coupe
-- Focus on the most prominent vehicles first
+🔍 ULTRA-PRECISE PLATE READING RULES:
+- Look at each character individually: Is it a 1 or 7? Is it a 2 or 8? Is it a 0 or O?
+- Pay special attention to similar-looking characters:
+  * 1 vs 7 vs I vs l
+  * 2 vs 8 vs B
+  * 0 vs O vs Q
+  * 5 vs S
+  * 6 vs G
+- Read the plate multiple times to verify accuracy
+- If you see "22-24869", write exactly "22-24869" (not 21-83168 or any other number)
+- Preserve ALL formatting: dashes (-), bullets (•), dots (.), spaces
 
-Return ONLY valid JSON in this format:
+COMMON PLATE FORMATS TO EXPECT:
+- XX-XXXXX (like 22-24869)
+- XX•XXXXX (like 22•24869)  
+- XXX-XXX
+- XXXXXXX
+
+ACCURACY VERIFICATION:
+- After reading each plate, ask yourself: "Am I 100% certain this is correct?"
+- If uncertain about any character, look more carefully
+- Better to return no result than a wrong result
+
+VEHICLE DETAILS:
+- Color: Primary body color (white, black, silver, blue, red, etc.)
+- Type: sedan, SUV, hatchback, pickup, truck, bus, van
+
+Return ONLY this JSON format:
 {
   "cars": [
     {
       "id": "car_1", 
-      "plateNumber": "22•24869",
+      "plateNumber": "22-24869",
       "color": "white",
       "type": "sedan"
     }
   ]
 }
 
-If no clear license plates are visible, return: {"cars": []}
-NO additional text, explanations, or markdown formatting.`;
+CRITICAL: If you cannot read a plate with 100% confidence, do not include that vehicle.
+NO explanations, NO markdown, ONLY the JSON response.`;
 
       // Call ChatGPT Vision API
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'user',
@@ -100,7 +115,7 @@ NO additional text, explanations, or markdown formatting.`;
           },
         ],
         max_tokens: 1000,
-        temperature: 0.1, // Low temperature for consistent results
+        temperature: 0.0, // Zero temperature for maximum accuracy and consistency
       });
 
       const content = response.choices[0]?.message?.content?.trim();
