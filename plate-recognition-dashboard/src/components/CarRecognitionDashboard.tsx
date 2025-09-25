@@ -168,12 +168,12 @@ const CarRecognitionDashboard: React.FC = () => {
   // Debug logging
   console.log('🚗 Dashboard render state:', {
     carsLoading,
-    carsError: carsError ? String(carsError) : null,
+    carsError: carsError ? 'Error occurred' : null,
     databaseCars: databaseCars.length,
     recognitionCars: recognitionCars.length,
     totalCars: cars.length,
-    statsError: statsError ? String(statsError) : null,
-    healthError: healthError ? String(healthError) : null,
+    statsError: statsError ? 'Error occurred' : null,
+    healthError: healthError ? 'Error occurred' : null,
   });
 
   return (
