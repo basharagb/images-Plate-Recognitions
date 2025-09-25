@@ -1,10 +1,14 @@
 import { Router, Request, Response } from 'express';
 import optimizedCarController from '../controllers/optimizedCarController';
 import strictCarController from '../controllers/strictCarController';
+import trafficCameraRoutes from './trafficCameraRoutes';
 import upload from '../middleware/upload';
 import { asyncHandler } from '../middleware/errorHandler';
 
 const router = Router();
+
+// Traffic Camera routes (specialized for speed cameras)
+router.use('/traffic-camera', trafficCameraRoutes);
 
 // Car Recognition routes
 router.post(
@@ -68,9 +72,11 @@ router.get('/health', (req: Request, res: Response) => {
       'Multi-vehicle detection', 
       'ChatGPT Vision API', 
       'Strict AI Vision Mode',
+      'Traffic Camera Recognition',
       'Alphanumeric plate extraction',
       'Vehicle type classification',
-      'Plate format normalization'
+      'Plate format normalization',
+      'Timestamp extraction'
     ],
     aiModel: 'gpt-4o-mini',
     chatgpt: process.env.OPENAI_API_KEY ? 'configured' : 'not configured',

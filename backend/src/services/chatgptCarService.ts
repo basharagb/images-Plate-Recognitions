@@ -43,28 +43,31 @@ class ChatGPTCarService {
       const imageBuffer = await fs.readFile(imagePath);
       const base64Image = imageBuffer.toString('base64');
 
-      // Enhanced prompt for better accuracy
-      const prompt = `You are an expert in license plate recognition. Analyze this image carefully and detect all vehicles with visible license plates.
+      // Enhanced prompt for single clearest car detection
+      const prompt = `You are an expert in license plate recognition. Analyze this image carefully and find the SINGLE CLEAREST vehicle with the most visible and readable license plate.
 
-For each vehicle found, extract the following information:
-1. License plate number - Look very carefully at the plate and read ALL visible characters (letters AND numbers). Do not convert letters to numbers.
-2. Car color - The primary color of the vehicle
+CRITICAL REQUIREMENT: Return only ONE car - the one with the clearest, most readable license plate.
+
+For the clearest vehicle found, extract the following information:
+1. License plate number - Read ALL visible characters (letters AND numbers) EXACTLY as they appear
+2. Car color - The primary color of the vehicle  
 3. Car type - The type of vehicle (sedan, SUV, truck, bus, van, pickup, motorcycle, etc.)
-4. Assign a unique ID
 
 IMPORTANT INSTRUCTIONS:
+- ONLY return the single car with the clearest license plate
 - Read the license plate EXACTLY as it appears - include both letters and numbers
 - If you see letters like "A", "B", "C" on the plate, include them as letters, not numbers
 - If you see numbers like "1", "2", "3" on the plate, include them as numbers
 - Look at the plate very carefully - sometimes what looks like a letter might be a number or vice versa
-- If the plate is partially obscured or unclear, try your best to read what is visible
+- Choose the car where you can read the license plate most clearly
+- If multiple cars are visible, pick the one with the best plate visibility
 - Return the plate number exactly as you see it, maintaining the original format
 
-Return the results in this exact JSON format:
+Return the results in this exact JSON format with only ONE car:
 {
   "cars": [
     {
-      "id": "car_1",
+      "id": "car_1", 
       "plateNumber": "ABC123",
       "color": "white",
       "type": "sedan"
@@ -72,7 +75,7 @@ Return the results in this exact JSON format:
   ]
 }
 
-If no vehicles with visible plates are detected, return: {"cars": []}
+If no vehicles with clearly visible plates are detected, return: {"cars": []}
 Only return valid JSON, no additional text or explanations.`;
 
       // Call ChatGPT Vision API with gpt-4o-mini
@@ -212,22 +215,19 @@ Only return valid JSON, no additional text or explanations.`;
     const colors = ['white', 'black', 'silver', 'red', 'blue', 'gray', 'green'];
     const types = ['sedan', 'SUV', 'hatchback', 'pickup', 'van', 'bus'];
     
-    // Generate 1-2 cars based on hash (focus on nearest/clearest cars)
-    const numCars = (hashNum % 2) + 1;
+    // Generate only 1 car (the clearest one)
     const results: CarDetails[] = [];
     
-    for (let i = 0; i < numCars; i++) {
-      const plateIndex = (hashNum + i) % demoPlates.length;
-      const colorIndex = (hashNum + i * 2) % colors.length;
-      const typeIndex = (hashNum + i * 3) % types.length;
-      
-      results.push({
-        id: `demo_car_${i + 1}`,
-        plateNumber: demoPlates[plateIndex] || '12-34567',
-        color: colors[colorIndex] || 'white',
-        type: types[typeIndex] || 'sedan'
-      });
-    }
+    const plateIndex = hashNum % demoPlates.length;
+    const colorIndex = hashNum % colors.length;
+    const typeIndex = hashNum % types.length;
+    
+    results.push({
+      id: 'demo_car_1',
+      plateNumber: demoPlates[plateIndex] || '12-34567',
+      color: colors[colorIndex] || 'white',
+      type: types[typeIndex] || 'sedan'
+    });
     
     return results;
   }
@@ -292,8 +292,8 @@ Only return valid JSON, no additional text or explanations.`;
           continue;
         }
 
-        // Clean plate number (digits only)
-        const cleanPlateNumber = this.extractDigitsOnly(car.plateNumber);
+        // Clean plate number (preserve original format with dashes)
+        const cleanPlateNumber = this.cleanPlateNumber(car.plateNumber);
         if (!cleanPlateNumber || cleanPlateNumber.length < 3) {
           console.warn('Invalid plate number:', car.plateNumber);
           continue;
@@ -334,7 +334,26 @@ Only return valid JSON, no additional text or explanations.`;
   }
 
   /**
-   * Clean and validate plate number (keep letters and numbers)
+   * Clean plate number preserving original format with dashes
+   */
+  private cleanPlateNumber(plateText: string): string {
+    if (!plateText || typeof plateText !== 'string') {
+      return '';
+    }
+    
+    // Clean the plate text - keep alphanumeric characters and dashes
+    const cleaned = plateText.replace(/[^A-Z0-9-]/gi, '').toUpperCase().trim();
+    
+    // Validate length (typically 3-15 characters including dashes)
+    if (cleaned.length < 2 || cleaned.length > 15) {
+      return '';
+    }
+    
+    return cleaned;
+  }
+
+  /**
+   * Clean and validate plate number (keep letters and numbers only - legacy method)
    */
   private extractDigitsOnly(plateText: string): string {
     if (!plateText || typeof plateText !== 'string') {

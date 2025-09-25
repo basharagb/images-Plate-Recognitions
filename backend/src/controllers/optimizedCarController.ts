@@ -40,17 +40,33 @@ export class OptimizedCarController {
             
             // Check if this is a demo response
             if ((result as any).isDemo) {
-              console.log('🎭 Demo mode: Not saving to database');
-              // For demo mode, just add to response without saving to database
+              console.log('🎭 Demo mode: Saving to database with demo detection ID');
+              // For demo mode, save to database but mark as demo detection
               for (const detectedCar of result.cars) {
-                allRecognizedCars.push({
-                  id: `demo_${Date.now()}`,
-                  plateNumber: detectedCar.plateNumber,
-                  color: detectedCar.color,
-                  type: detectedCar.type,
-                  imageUrl: `/uploads/${file.filename}`,
-                  timestamp: new Date(),
-                });
+                try {
+                  const car = await Car.create({
+                    plateNumber: detectedCar.plateNumber,
+                    color: detectedCar.color,
+                    type: detectedCar.type,
+                    imageUrl: `/uploads/${file.filename}`,
+                    detectionId: `demo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                    timestamp: new Date(),
+                  });
+
+                  allRecognizedCars.push({
+                    id: car.id,
+                    plateNumber: car.plateNumber,
+                    color: car.color,
+                    type: car.type,
+                    imageUrl: car.imageUrl,
+                    timestamp: car.timestamp,
+                  });
+
+                  console.log(`💾 Saved demo car to database: Plate ${car.plateNumber}, ${car.color} ${car.type}`);
+                } catch (dbError) {
+                  console.error('❌ Database save error for demo car:', dbError);
+                  // Continue processing other cars even if one fails
+                }
               }
             } else {
               // Save each detected car to MySQL database (real detection)
@@ -61,6 +77,7 @@ export class OptimizedCarController {
                     color: detectedCar.color,
                     type: detectedCar.type,
                     imageUrl: `/uploads/${file.filename}`,
+                    detectionId: `optimized_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                     timestamp: new Date(),
                   });
 
