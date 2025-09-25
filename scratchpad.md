@@ -44,24 +44,33 @@ Create a React dashboard for license plate recognition system for speeding cars 
 - [x] Set up GitHub repository
 - [x] Final testing and deployment
 
-## Current Task: 🔧 FIXING PLATE RECOGNITION ACCURACY ISSUES
+## Current Task: 🎯 IMPLEMENTING ENHANCED AI VISION MODEL SPECIFICATIONS
 
-**Objective:** Fix critical issues with license plate recognition accuracy and image display.
+**Objective:** Implement comprehensive AI Vision model with strict detection criteria and enhanced vehicle analysis.
 
-**🚨 IDENTIFIED ISSUES:**
-1. **Incorrect Plate Recognition**: System detected "35-789-01" instead of correct "22-24869"
-2. **Image Display Problem**: "Image not available" error in detail view
-3. **Wrong Car Selection**: System not focusing on the correct white car
-4. **Digits-Only Limitation**: Current system extracts digits only, missing letters/special chars
+**📋 NEW VISION MODEL REQUIREMENTS:**
+1. **Strict Vehicle Detection**: Only fully visible and closed cars in frame
+2. **Plate Readability Filter**: Extract plates ONLY if clear and readable
+3. **Enhanced Vehicle Analysis**: Detect car color and type (Sedan, SUV, Pickup, Truck, Bus)
+4. **Plate Format Normalization**: Digits/letters only, replace dots/bullets with "-"
+5. **Content Filtering**: Exclude timestamps, text overlays, non-plate numbers
+6. **Structured JSON Output**: Standardized response format
 
-**🔧 IMPLEMENTED FIXES:**
-- [x] Update vision service to handle alphanumeric plates (letters + numbers + special chars)
-- [x] Fix image URL generation and file serving
-- [x] Improve car detection accuracy with better prompts
-- [x] Updated OpenAI model to gpt-4o-mini for all services
-- [x] Enhanced plate number validation and cleaning
-- [x] Added comprehensive logging for debugging
-- [ ] Test with real-world license plate formats (in progress)
+**🔧 IMPLEMENTATION PLAN:**
+- [x] Update AI vision prompts with strict detection criteria
+- [x] Implement vehicle type classification
+- [x] Add plate format normalization logic
+- [x] Enhance filtering for blurry/cropped vehicles
+- [x] Update response format to structured JSON array
+- [x] Create comprehensive unit tests
+- [x] Update Car model with detectionId field
+- [x] Add new API routes for strict vision service
+- [ ] Test with various image scenarios (in progress)
+
+**Previous Task Status: ✅ COMPLETED**
+- Fixed plate recognition accuracy issues
+- Resolved image display problems
+- Enhanced car detection with better prompts
 
 **📋 UPDATED SYSTEM STATUS:**
 - **Backend**: ✅ Running on http://localhost:3001
@@ -118,3 +127,14 @@ Create a React dashboard for license plate recognition system for speeding cars 
 - **Debugging Logging**: Comprehensive logging essential for troubleshooting AI vision responses
 - **Character Normalization**: Convert various dash/bullet types to standard characters for consistency
 - **Testing Private Methods**: Jest mocking required for testing services with external dependencies
+
+### LATEST LESSONS (Strict AI Vision Implementation):
+- **Strict Detection Criteria**: Implementing strict filtering dramatically improves detection quality
+- **Plate Format Normalization**: Standardizing plate formats (dots/bullets to dashes) ensures consistency
+- **Vehicle Type Classification**: Limited vocabulary (Sedan, SUV, Pickup, Truck, Bus) improves accuracy
+- **Content Filtering**: Excluding timestamps, overlays, and non-plate text prevents false positives
+- **Quality vs Quantity**: Strict mode trades detection quantity for higher quality results
+- **Database Schema Evolution**: Adding detectionId field enables tracking different detection methods
+- **API Versioning**: Separate endpoints for different detection modes allow A/B testing
+- **Comprehensive Testing**: Unit tests with mocked dependencies ensure service reliability
+- **TypeScript Validation**: Strong typing catches errors early in development process

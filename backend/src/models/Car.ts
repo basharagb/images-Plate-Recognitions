@@ -8,6 +8,7 @@ export interface CarAttributes {
   color: string;
   type: string;
   imageUrl: string;
+  detectionId?: string;
   timestamp: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -25,6 +26,7 @@ class Car extends Model<CarAttributes, CarCreationAttributes>
   public color!: string;
   public type!: string;
   public imageUrl!: string;
+  public detectionId?: string;
   public timestamp!: Date;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -69,6 +71,11 @@ Car.init(
       validate: {
         notEmpty: true,
       },
+    },
+    detectionId: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'Identifier for the detection method used (e.g., strict_, regular_)',
     },
     timestamp: {
       type: DataTypes.DATE,
